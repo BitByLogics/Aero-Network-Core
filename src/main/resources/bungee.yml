@@ -1,0 +1,4 @@
+main: net.aeronetwork.proxy.AeroProxyCore
+name: AeroProxy
+version: ${project.version}
+authors: [AeroNetwork]

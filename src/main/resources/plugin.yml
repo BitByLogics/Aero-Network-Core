@@ -1,0 +1,5 @@
+name: AeroCore
+version: ${project.version}
+main: net.aeronetwork.core.AeroCore
+authors: [AeroNetwork]
+description: AeroCore

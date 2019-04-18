@@ -1,0 +1,53 @@
+PACKAGES (within a directory [/packages]):
+- all world folders
+- defines env vars
+
+DEPLOY.JSON:
+- each jar can make infinite deploy_{id}.json (or just deploy.json for a single process) files
+
+FORM:
+{
+  "ids": [
+    "some_id",
+    "another_id"
+  ],
+  "cache": 2,
+  "root": "some directory",
+  "envVars": [
+    "SOME_ENV_VAR=x",
+    "SOME_ENV_VAR_2=y"
+  ],
+  "serverType": "SERVER_LOBBY"
+}
+
+- the jar will be placed within the packages directory within another directory (the name of the package)
+
+TO CREATE A PACKAGE:
+- create a directory in /package, this can be named anything (the namespace won't be used anywhere)
+- put the JAR file into the directory, and the root directory if specified
+- that's all
+
+===============================
+MAIN CONFIG.JSON:
+-
+
+===============================
+
+FROM alpine:3.5
+
+ARG SERVER_ROOT=aero/
+ENV something=something
+
+RUN apk add --update openjdk8-jre-base
+RUN mkdir $SERVER_ROOT
+ADD resources/{jar} $SERVER_ROOT
+ADD resources/{config file} $SERVER_ROOT
+ADD packages/{pkg}/{root} $SERVER_ROOT
+
+WORKDIR $SERVER_ROOT
+RUN mkdir plugins/
+ADD resources/AeroCore.jar plugins/
+
+CMD java -Xms{min}m -Xmx{max}m -Dcom.mojang.eula.agree=true -jar {jar}
+
+EXPOSE 25565

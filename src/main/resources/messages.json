@@ -1,0 +1,13 @@
+{
+  "language": "en_US",
+  "messages": {
+    "punishment": {
+      "mute": "",
+      "ban": ""
+    },
+    "general_item": {
+      "game_menu": "Game Menu",
+      "profile": "Profile"
+    }
+  }
+}
