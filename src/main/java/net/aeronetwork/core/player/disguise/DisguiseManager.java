@@ -1,14 +1,16 @@
 package net.aeronetwork.core.player.disguise;
 
-import com.nametagedit.plugin.NametagEdit;
+import me.neznamy.tab.api.TabAPI;
+import me.neznamy.tab.api.TabPlayer;
+import me.neznamy.tab.api.team.UnlimitedNametagManager;
 import net.aeronetwork.core.AeroCore;
-import net.aeronetwork.core.manager.Manager;
-import net.aeronetwork.core.player.AeroPlayer;
+import net.aeronetwork.core.command.impl.management.RanksCommand;
 import net.aeronetwork.core.command.impl.player.disguise.DisguiseCommand;
 import net.aeronetwork.core.command.impl.player.disguise.UndisguiseCommand;
+import net.aeronetwork.core.manager.Manager;
+import net.aeronetwork.core.player.AeroPlayer;
 import net.aeronetwork.core.player.disguise.utils.DisguiseUtils;
 import net.aeronetwork.core.player.rank.Rank;
-import net.aeronetwork.core.command.impl.management.RanksCommand;
 import net.aeronetwork.core.util.FM;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
@@ -17,8 +19,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class DisguiseManager extends Manager {
 
+    private final TabAPI tabAPI;
+
     public DisguiseManager(JavaPlugin plugin) {
         super("Disguise Manager", "Handles all disguise related tasks.", plugin);
+
+        this.tabAPI = TabAPI.getInstance();
+
         AeroCore.COMMAND_MANAGER.registerCommand(DisguiseCommand.class);
         AeroCore.COMMAND_MANAGER.registerCommand(UndisguiseCommand.class);
         AeroCore.COMMAND_MANAGER.registerCommand(RanksCommand.class);
@@ -28,23 +35,23 @@ public class DisguiseManager extends Manager {
      * Disguise the specified player.
      *
      * @param player The player being disguised.
-     * @param name The name they're being disguised as.
-     * @param skin The skin they're being disguised with.
-     * @param rank The rank they're being disguised with.
+     * @param name   The name they're being disguised as.
+     * @param skin   The skin they're being disguised with.
+     * @param rank   The rank they're being disguised with.
      */
     public void disguise(AeroPlayer player, String name, String skin, Rank rank) {
-        if(Bukkit.getPlayerExact(name) != null) {
+        if (Bukkit.getPlayerExact(name) != null) {
             player.sendMessage(FM.mainFormat("Disguise", "&cYou cannot disguise as an online player."));
             return;
         }
 
-        if(AeroCore.PLAYER_MANAGER.getPlayer(name) != null
+        if (AeroCore.PLAYER_MANAGER.getPlayer(name) != null
                 && AeroCore.PLAYER_MANAGER.getPlayer(name).getRank().getPriority() < player.getRank().getPriority()) {
             player.sendMessage(FM.mainFormat("Disguise", "You cannot disguise as someone with a higher rank than you."));
             return;
         }
 
-        if(rank.getPriority() < player.getRank().getPriority()) {
+        if (rank.getPriority() < player.getRank().getPriority()) {
             player.sendMessage(FM.mainFormat("Disguise", "You cannot disguise with a rank higher than yours."));
             return;
         }
@@ -56,12 +63,10 @@ public class DisguiseManager extends Manager {
         DisguiseUtils.modifyGameProfile(name, skin, ((CraftPlayer) bukkitPlayer).getHandle().getProfile());
         DisguiseUtils.updateSelf(bukkitPlayer);
         DisguiseUtils.updateAll(bukkitPlayer);
-        NametagEdit.getApi().clearNametag(bukkitPlayer.getName());
-        NametagEdit.getApi().setNametag(
-                bukkitPlayer.getName(),
-                player.getDisguiseData().getRank().getPrefix(),
-                player.getDisguiseData().getRank().getSuffix()
-        );
+        TabPlayer tabPlayer = tabAPI.getPlayer(bukkitPlayer.getUniqueId());
+        ((UnlimitedNametagManager) tabAPI.getTeamManager()).setName(tabPlayer, player.getDisguiseData().getName());
+        tabAPI.getTeamManager().setPrefix(tabPlayer, player.getDisguiseData().getRank().getPrefix());
+        tabAPI.getTeamManager().setSuffix(tabPlayer, player.getDisguiseData().getRank().getSuffix());
         bukkitPlayer.sendMessage(FM.mainFormat("Disguise", "Now disguised as: &c" + name));
     }
 
@@ -80,7 +85,10 @@ public class DisguiseManager extends Manager {
         );
         DisguiseUtils.updateSelf(bukkitPlayer);
         DisguiseUtils.updateAll(bukkitPlayer);
-        NametagEdit.getApi().setNametag(bukkitPlayer, p.getRank().getPrefix(), p.getRank().getSuffix());
+        TabPlayer tabPlayer = tabAPI.getPlayer(bukkitPlayer.getUniqueId());
+        ((UnlimitedNametagManager) tabAPI.getTeamManager()).setName(tabPlayer, bukkitPlayer.getName());
+        tabAPI.getTeamManager().setPrefix(tabPlayer, p.getRank().getPrefix());
+        tabAPI.getTeamManager().setSuffix(tabPlayer, p.getRank().getSuffix());
         bukkitPlayer.sendMessage(FM.mainFormat("Disguise", "You're no longer disguised."));
     }
 
@@ -90,17 +98,17 @@ public class DisguiseManager extends Manager {
      * @param player The player whose being redisguised.
      */
     public void redisguise(AeroPlayer player) {
-        if(player.isDisguised()) {
-            if(player.getRank().getPriority() <= Rank.YT.getPriority()) {
-                if(Bukkit.getPlayer(player.getDisguiseData().getName()) != null) {
+        if (player.isDisguised()) {
+            if (player.getRank().getPriority() <= Rank.YT.getPriority()) {
+                if (Bukkit.getPlayer(player.getDisguiseData().getName()) != null) {
                     player.sendMessage(FM.mainFormat("Disguise", "&cYour disguise is an online player, undisguising."));
                     player.updateDisguised(false);
-                } else if(AeroCore.PLAYER_MANAGER.getPlayer(player.getDisguiseData().getName()) != null
+                } else if (AeroCore.PLAYER_MANAGER.getPlayer(player.getDisguiseData().getName()) != null
                         && AeroCore.PLAYER_MANAGER.getPlayer(player.getDisguiseData().getName()).getRank().getPriority() < player.getRank().getPriority()) {
                     player.sendMessage(FM.mainFormat("Disguise", "&cThe player you were disguised as has a higher rank than you, undisguising."));
                     player.updateDisguised(false);
                     return;
-                } else if(player.getDisguiseData().getRank().getPriority() < player.getRank().getPriority()) {
+                } else if (player.getDisguiseData().getRank().getPriority() < player.getRank().getPriority()) {
                     player.sendMessage(FM.mainFormat("Disguise", "&cYour disguised rank is higher than your rank, undisguising."));
                     player.updateDisguised(false);
                 } else {

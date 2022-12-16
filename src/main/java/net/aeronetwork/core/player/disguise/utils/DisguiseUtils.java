@@ -6,7 +6,9 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.util.UUIDTypeAdapter;
-import com.nametagedit.plugin.NametagEdit;
+import me.neznamy.tab.api.TabAPI;
+import me.neznamy.tab.api.TabPlayer;
+import me.neznamy.tab.api.team.UnlimitedNametagManager;
 import net.aeronetwork.core.AeroCore;
 import net.aeronetwork.core.player.disguise.DisguiseData;
 import net.aeronetwork.core.player.disguise.SkinData;
@@ -39,7 +41,7 @@ public class DisguiseUtils {
      * Updates a player with the data in {@link DisguiseData}.
      *
      * @param player The player to update.
-     * @param data The disguise data to apply.
+     * @param data   The disguise data to apply.
      */
     public static void updatePlayer(Player player, DisguiseData data) {
         modifyGameProfile(data.getName(), data.getSkin(), ((CraftPlayer) player).getProfile());
@@ -49,21 +51,20 @@ public class DisguiseUtils {
         new BukkitRunnable() {
             @Override
             public void run() {
-                NametagEdit.getApi().clearNametag(player.getName());
-                NametagEdit.getApi().setNametag(
-                        player.getName(),
-                        data.getRank().getPrefix(),
-                        data.getRank().getSuffix()
-                );
+                TabAPI tabAPI = TabAPI.getInstance();
+                TabPlayer tabPlayer = tabAPI.getPlayer(player.getUniqueId());
+                ((UnlimitedNametagManager) tabAPI.getTeamManager()).setName(tabPlayer, player.getName());
+                tabAPI.getTeamManager().setPrefix(tabPlayer, data.getRank().getPrefix());
+                tabAPI.getTeamManager().setSuffix(tabPlayer, data.getRank().getSuffix());
             }
         }.runTaskLater(AeroCore.INSTANCE, 0);
     }
-    
+
     /**
      * Modify the specified GameProfile.
-     * 
-     * @param name The name being injected
-     * @param skin The skin being injected
+     *
+     * @param name    The name being injected
+     * @param skin    The skin being injected
      * @param profile The GameProfile being modified
      */
     public static void modifyGameProfile(String name, String skin, GameProfile profile) {
@@ -87,9 +88,9 @@ public class DisguiseUtils {
 
     /**
      * Set a player's skin.
-     * 
+     *
      * @param profile The PropertyMap being modified.
-     * @param name The name of the skin we're retrieving
+     * @param name    The name of the skin we're retrieving
      * @return Whether or not we successfully set the skin
      */
     public static boolean setSkin(PropertyMap profile, String name) {
@@ -123,10 +124,10 @@ public class DisguiseUtils {
         }
     }
 
-    
+
     /**
      * Update the player's skin.
-     * 
+     *
      * @param p The player whose skin is being updated.
      */
     public static void updateSelf(Player p) {
@@ -152,7 +153,7 @@ public class DisguiseUtils {
 
     /**
      * Get the player's dimension (Due to bug with Spigot).
-     * 
+     *
      * @param player The player whose dimension is being retrieved
      * @return The player's dimension ID
      */
@@ -168,7 +169,7 @@ public class DisguiseUtils {
 
     /**
      * Update a player's skin for all other players.
-     * 
+     *
      * @param p The player whose skin is being updated
      */
     public static void updateAll(Player p) {
